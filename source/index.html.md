@@ -1,239 +1,204 @@
 ---
 title: API Reference
 
-language_tabs: # must be one of https://git.io/vQNgJ
-  - shell
-  - ruby
-  - python
-  - javascript
+<!--language_tabs: # must be one of https://git.io/vQNgJ-->
+<!--  - curl-->
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
-
-includes:
-  - errors
+  - <a href='https://eff-dev.herokuapp.com/'>Development Base URL</a>
 
 search: true
 ---
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+## General
 
-We have language bindings in Shell, Ruby, and Python! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+This document should serve as the de-facto guide for the Eff API. It aims to cover all aspects of the RESTful API upon which the main website is built. If you see any issues please do not hesitate to open up an issue in the repository from which this was cloned.  
 
-This example API documentation page was created with [Slate](https://github.com/lord/slate). Feel free to edit it and use it as a base for your own API's documentation.
+## JSON Formatting
+
+The JSON request and response body code blocks borrow from Swift's type declaration syntax. While the keys are always strings, the values are declared by the type expected. Values that have the potential of being nil are represented with a question mark. For example, if a key is always expected to return a string it is declared as `String` –– similarly if that key has the potential of being nil inside of a response then it will be marked as `String?`. The same applies for requests.
+
+## Signed Requests
+
+There are certain requests that are required to be signed with an authentication token. The appropriate manner to do this is through a header with the `Authorization` key. The value of this header should contain the word `Bearer` with a single space and then finally the authentication token of the user attempting to make the request. The following is an example of such a header. `"Authorization: Bearer BFF2F560-1AC3-4131-BA94-8E1BA8921799"`
 
 # Authentication
 
-> To authorize, use this code:
+## Register
 
-```ruby
-require 'kittn'
+> Request Body:
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
+```swift
+{
+    "session":  {
+        "name" : String
+    },
+    "user":  {
+        "bio": String?
+        "email": String
+        "location": String?
+        "name": String
+        "password": String
+        "username": String
+        "website": String?
+    }
+}
 ```
 
-```python
-import kittn
 
-api = kittn.authorize('meowmeowmeow')
+> Response Body:
+
+```swift
+{
+    "session": {
+        "token": String
+        "name": String
+    }
+    "user": {
+        "bio": String?
+        "email": String
+        "id": UUID
+        "location": String?
+        "name": String
+        "username": String
+        "website": String?
+    }
+}
+```
+`POST users/register`
+
+This endpoint registers a new user.
+
+## Login 
+
+> Request Body:
+
+```swift
+{
+    "email": String
+    "password": String
+}
 ```
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
+> Response Body:
+
+```swift
+{
+    "session": {
+        "token": String
+        "name": String
+    }
+    "user": {
+        "bio": String?
+        "email": String
+        "id": UUID
+        "location": String?
+        "name": String
+        "username": String
+        "website": String?
+    }
+}
 ```
 
-```javascript
-const kittn = require('kittn');
+`POST users/register`
 
-let api = kittn.authorize('meowmeowmeow');
+Obtain an authorization token for an existing user to use for future signed requests.
+
+# Debug
+
+## Ping
+
+> Response Body:
+
+```
+pong
 ```
 
-> Make sure to replace `meowmeowmeow` with your API key.
+`GET debug/ping`
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+Ping the server.
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
 
-`Authorization: meowmeowmeow`
+# Users
+
+## Me
+
+> Response Body:
+
+```swift
+"user": {
+    "bio": String?
+    "email": String
+    "id": UUID
+    "location": String?
+    "name": String
+    "username": String
+    "website": String?
+}
+```
+
+`GET users/me`
+
+Fetch data about the logged in user.
 
 <aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
+This is a signed request.
 </aside>
 
-# Kittens
+## Fetch
 
-## Get All Kittens
+> Response Body:
 
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
-
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
-
-> The above command returns JSON structured like this:
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
-
-This endpoint retrieves all kittens.
-
-### HTTP Request
-
-`GET http://example.com/api/kittens`
-
-### Query Parameters
-
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
-
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
-
-## Get a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
+```swift
+"user": {
+    "bio": String?
+    "email": String
+    "id": UUID
+    "location": String?
+    "name": String
+    "username": String
+    "website": String?
 }
 ```
 
-This endpoint retrieves a specific kitten.
+`GET users/:id`
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+Fetch a user by their ID.
 
-### HTTP Request
+## Update
 
-`GET http://example.com/kittens/<ID>`
+> Request Body:
 
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
-
-## Delete a Specific Kitten
-
-```ruby
-require 'kittn'
-
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
+```swift
 {
-  "id": 2,
-  "deleted" : ":("
+    "bio": String?
+    "email": String?
+    "location": String?
+    "name": String?
+    "username": String?
+    "website": String?
 }
 ```
 
-This endpoint deletes a specific kitten.
+> Response Body:
 
-### HTTP Request
+```swift
+{
+    "bio": String?
+    "email": String?
+    "location": String?
+    "name": String?
+    "username": String?
+    "website": String?
+}
+```
 
-`DELETE http://example.com/kittens/<ID>`
+`PUT users/me/update`
 
-### URL Parameters
+Update details of the logged in user.
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
-
+<aside class="notice">
+Signed request.
+</aside>
